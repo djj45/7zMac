@@ -131,7 +131,7 @@ private struct ExtractSettingsView: View {
     @AppStorage(PrefKey.zipCodePage) private var zipCodePage = ZipCodePage.autoGBK.rawValue
     @AppStorage(PrefKey.unwrapTar) private var unwrapTar = true
     @AppStorage(PrefKey.removeJunk) private var removeJunk = true
-    @AppStorage(PrefKey.revealInFinder) private var revealInFinder = false
+    @AppStorage(PrefKey.afterExtract) private var afterExtract = AfterExtract.open.rawValue
     @AppStorage(PrefKey.trashArchive) private var trashArchive = false
     @AppStorage(PrefKey.quarantine) private var quarantine = true
 
@@ -144,6 +144,9 @@ private struct ExtractSettingsView: View {
                 Picker("同名时", selection: $conflict) {
                     ForEach(ConflictMode.allCases) { Text($0.title).tag($0.rawValue) }
                 }
+                Picker("解压完成后", selection: $afterExtract) {
+                    ForEach(AfterExtract.allCases) { Text($0.title).tag($0.rawValue) }
+                }
                 Picker("ZIP 文件名编码", selection: $zipCodePage) {
                     ForEach(ZipCodePage.allCases) { Text($0.title).tag($0.rawValue) }
                 }
@@ -151,7 +154,6 @@ private struct ExtractSettingsView: View {
             Section {
                 Toggle("自动解开 .tar.gz / .tar.xz 等双层压缩包", isOn: $unwrapTar)
                 Toggle("删除 __MACOSX 和 .DS_Store", isOn: $removeJunk)
-                Toggle("解压后在 Finder 中显示", isOn: $revealInFinder)
                 Toggle("解压后把压缩包移到废纸篓", isOn: $trashArchive)
                 Toggle("解出的文件继承压缩包的“来自互联网”标记（更安全）", isOn: $quarantine)
             }

@@ -20,7 +20,14 @@ ln -s /Applications "$STAGE/Applications"
 
 mkdir -p dist
 rm -f "$DMG"
-hdiutil create -quiet -volname "7zMac ${VERSION}" -srcfolder "$STAGE" -fs HFS+ -format UDZO -ov "$DMG"
+# CI 机器上 hdiutil 偶尔报 “Resource busy”，重试几次
+for i in 1 2 3; do
+  if hdiutil create -quiet -volname "7zMac ${VERSION}" -srcfolder "$STAGE" -fs HFS+ -format UDZO -ov "$DMG"; then
+    break
+  fi
+  [ "$i" = 3 ] && exit 1
+  sleep 5
+done
 
 # 用和 App 相同的身份给 DMG 签名（ad-hoc 构建则跳过）
 SIGN_ID="$(codesign -dvv "$APP" 2>&1 | sed -n 's/^Authority=\(Apple Development.*\)$/\1/p' | head -1 || true)"

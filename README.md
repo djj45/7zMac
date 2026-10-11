@@ -16,6 +16,7 @@
   - 压缩包里只有一个文件或一个文件夹 → 直接放出来；
   - 有多个项目 → 自动新建与压缩包同名的文件夹；
   - `.tar.gz` / `.tar.xz` 等双层包一次解开；自动清理 `__MACOSX`、`.DS_Store`。
+  - 解压完成后自动打开解压出的文件夹（可在设置里改为“在 Finder 中选中”或“不做任何事”）。
 - **后台运行**：右键操作不打开主窗口、不出现在 Dock；耗时任务在右上角显示进度，可取消。
 - **双击浏览**：关联常见压缩格式，双击打开浏览窗口，支持搜索、双击预览、拖出到 Finder、解压选中项。
 - **中文 ZIP 不乱码**：给 7-Zip 打了补丁，Windows 中文系统打出的 GBK 文件名 ZIP 也能正确显示。
@@ -77,8 +78,8 @@ bash scripts/make-dmg.sh       # 输出 dist/7zMac-<版本>.dmg
 2. 提交后打标签并推送：
 
    ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
+   git tag v1.0.1
+   git push origin v1.0.1
    ```
 
 GitHub Actions（`.github/workflows/release.yml`）会在 macOS 机器上自动构建 DMG 并发布到 Releases。

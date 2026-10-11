@@ -254,11 +254,16 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
         outlineView.selectedRowIndexes.compactMap { outlineView.item(atRow: $0) as? ArchiveNode }
     }
 
+    /// 在浏览窗口里点的解压：按设置执行；设置为“不做任何事”时至少在 Finder 中选中结果
+    private static var afterExtractFromBrowser: AfterExtract {
+        Prefs.afterExtract == .nothing ? .reveal : Prefs.afterExtract
+    }
+
     /// 解压整个压缩包到它所在的文件夹（与右键「解压」相同的智能规则）
     @objc func extractAll(_ sender: Any?) {
         guard let url = archiveURL else { return }
         if let pw = archiveDocument?.password { JobRunner.shared.rememberPassword(pw, for: url) }
-        JobRunner.shared.enqueueExtract(url, into: url.deletingLastPathComponent(), reveal: true)
+        JobRunner.shared.enqueueExtract(url, into: url.deletingLastPathComponent(), after: Self.afterExtractFromBrowser)
     }
 
     /// 选择目录后解压：有选中项则只解压选中项，否则解压全部
@@ -276,7 +281,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
             guard response == .OK, let dir = panel.url else { return }
             if let pw = self?.archiveDocument?.password { JobRunner.shared.rememberPassword(pw, for: url) }
             if nodes.isEmpty {
-                JobRunner.shared.enqueueExtract(url, into: dir, reveal: true)
+                JobRunner.shared.enqueueExtract(url, into: dir, after: Self.afterExtractFromBrowser)
             } else {
                 JobRunner.shared.enqueueExtractEntries(url, entries: nodes.map(\.ref), into: dir) { results in
                     if !results.isEmpty { NSWorkspace.shared.activateFileViewerSelecting(results) }

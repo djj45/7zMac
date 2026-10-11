@@ -72,6 +72,18 @@ enum ConflictMode: String, CaseIterable, Identifiable {
     }
 }
 
+enum AfterExtract: String, CaseIterable, Identifiable {
+    case open, reveal, nothing
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .open:    return "打开解压出的文件夹"
+        case .reveal:  return "在 Finder 中选中结果"
+        case .nothing: return "不做任何事"
+        }
+    }
+}
+
 enum ZipCodePage: Int, CaseIterable, Identifiable {
     case autoGBK = 936, big5 = 950, shiftJIS = 932, utf8 = 65001
     var id: Int { rawValue }
@@ -102,7 +114,7 @@ enum PrefKey {
     static let zipCodePage     = "extract.zipCodePage"
     static let unwrapTar       = "extract.unwrapTar"
     static let removeJunk      = "extract.removeMacJunk"
-    static let revealInFinder  = "extract.revealInFinder"
+    static let afterExtract    = "extract.afterExtract"
     static let trashArchive    = "extract.trashArchive"
     static let quarantine      = "extract.propagateQuarantine"
 
@@ -126,7 +138,7 @@ enum Prefs {
             PrefKey.zipCodePage: ZipCodePage.autoGBK.rawValue,
             PrefKey.unwrapTar: true,
             PrefKey.removeJunk: true,
-            PrefKey.revealInFinder: false,
+            PrefKey.afterExtract: AfterExtract.open.rawValue,
             PrefKey.trashArchive: false,
             PrefKey.quarantine: true,
 
@@ -150,7 +162,7 @@ enum Prefs {
     static var zipCodePage: ZipCodePage { ZipCodePage(rawValue: d.integer(forKey: PrefKey.zipCodePage)) ?? .autoGBK }
     static var unwrapTar: Bool { d.bool(forKey: PrefKey.unwrapTar) }
     static var removeJunk: Bool { d.bool(forKey: PrefKey.removeJunk) }
-    static var revealInFinder: Bool { d.bool(forKey: PrefKey.revealInFinder) }
+    static var afterExtract: AfterExtract { AfterExtract(rawValue: d.string(forKey: PrefKey.afterExtract) ?? "") ?? .open }
     static var trashArchive: Bool { d.bool(forKey: PrefKey.trashArchive) }
     static var quarantine: Bool { d.bool(forKey: PrefKey.quarantine) }
 

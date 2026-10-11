@@ -90,7 +90,7 @@ final class JobRunner: ObservableObject {
     }
 
     /// 智能解压整个压缩包到 dir
-    func enqueueExtract(_ archive: URL, into dir: URL, reveal: Bool = Prefs.revealInFinder) {
+    func enqueueExtract(_ archive: URL, into dir: URL, after: AfterExtract = Prefs.afterExtract) {
         add(Job(kind: .extract, title: "解压 \(archive.lastPathComponent)") { [weak self] job in
             var password = self?.passwords[archive.path]
             while true {
@@ -98,7 +98,7 @@ final class JobRunner: ObservableObject {
                     let result = try await SmartExtract.run(archive, into: dir, password: password,
                                                             progress: job.progressHandler, cancel: job.cancel)
                     if let password { self?.passwords[archive.path] = password }
-                    if reveal { NSWorkspace.shared.activateFileViewerSelecting([result]) }
+                    Self.finish(result, after: after)
                     if Prefs.trashArchive, !ArchiveTypes.isMultiVolume(name: archive.lastPathComponent) {
                         try? FileManager.default.trashItem(at: archive, resultingItemURL: nil)
                     }
@@ -139,6 +139,22 @@ final class JobRunner: ObservableObject {
                 }
             }
         })
+    }
+
+    /// 解压完成后的动作：文件夹 → 在 Finder 中打开；单个文件 → 在 Finder 中选中
+    static func finish(_ result: URL, after: AfterExtract) {
+        switch after {
+        case .nothing:
+            break
+        case .reveal:
+            NSWorkspace.shared.activateFileViewerSelecting([result])
+        case .open:
+            if FileOps.isDirectory(result) {
+                NSWorkspace.shared.open(result)
+            } else {
+                NSWorkspace.shared.activateFileViewerSelecting([result])
+            }
+        }
     }
 
     func rememberPassword(_ password: String, for archive: URL) {

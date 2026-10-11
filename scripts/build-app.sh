@@ -102,7 +102,7 @@ APP="build/Build/Products/Release/7zMac.app"
 codesign --verify --deep --strict "$APP"
 
 if [ "${NO_INSTALL:-0}" = "1" ]; then
-  echo "✓ 已构建 $APP（未安装）"
+  echo "✓ 已构建 ${APP}（未安装）"
   exit 0
 fi
 
