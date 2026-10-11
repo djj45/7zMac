@@ -4,6 +4,8 @@ options:
   deploymentTarget:
     macOS: "13.0"
   createIntermediateGroups: true
+  # 告诉 Xcode 工程已按新版设置检查过，避免每次生成后都提示“Update to recommended settings”
+  xcodeVersion: "26.0"
 
 settings:
   base:
@@ -17,6 +19,7 @@ settings:
     CODE_SIGN_STYLE: Manual
     CODE_SIGN_IDENTITY: "-"
     DEAD_CODE_STRIPPING: YES
+    STRING_CATALOG_GENERATE_SYMBOLS: YES
 
 targets:
   SevenZipMac:
