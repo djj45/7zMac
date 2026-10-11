@@ -1,0 +1,16 @@
+# 构建产物
+build/
+dist/
+*.xcodeproj/
+
+# 7-Zip 源码与编译结果（由 scripts/fetch-7zip.sh / build-7zz.sh 生成）
+vendor/7zip/
+vendor/bin/
+vendor/tools/
+vendor/*.tar.xz
+vendor/*.part
+
+# 本机私有配置
+scripts/local.env
+.7zmac-src.tar
+.DS_Store

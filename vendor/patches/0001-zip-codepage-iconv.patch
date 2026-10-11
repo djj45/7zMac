@@ -1,0 +1,82 @@
+--- a/CPP/7zip/Archive/Zip/ZipItem.cpp
++++ b/CPP/7zip/Archive/Zip/ZipItem.cpp
+@@ -15,6 +15,57 @@
+ 
+ #include "ZipItem.h"
+ 
++#ifndef _WIN32
++// 7zMac patch: convert legacy (non-UTF-8) ZIP names with iconv
++#include <iconv.h>
++#include <errno.h>
++
++static const char *My_Iconv_CodePageName(UINT cp)
++{
++  switch (cp)
++  {
++    case 936:   return "GB18030";
++    case 54936: return "GB18030";
++    case 950:   return "BIG5";
++    case 932:   return "SHIFT_JIS";
++    case 949:   return "CP949";
++    case 866:   return "CP866";
++    case 437:   return "CP437";
++    case 1251:  return "CP1251";
++    case 1252:  return "CP1252";
++    default:    return NULL;
++  }
++}
++
++static bool My_Iconv_To_Unicode(UString &res, const AString &s, UINT cp)
++{
++  const char *name = My_Iconv_CodePageName(cp);
++  if (!name || sizeof(wchar_t) != 4)
++    return false;
++  iconv_t cd = iconv_open("UTF-32LE", name);
++  if (cd == (iconv_t)-1)
++    return false;
++  const size_t inLen = s.Len();
++  CByteBuffer inBuf(inLen + 1);
++  memcpy(inBuf, s.Ptr(), inLen);
++  CByteBuffer outBuf(inLen * 4 + 4);
++  char *in = reinterpret_cast<char *>(static_cast<Byte *>(inBuf));
++  size_t inLeft = inLen;
++  char *out = reinterpret_cast<char *>(static_cast<Byte *>(outBuf));
++  size_t outLeft = outBuf.Size();
++  const size_t r = iconv(cd, &in, &inLeft, &out, &outLeft);
++  iconv_close(cd);
++  if (r == (size_t)-1 || inLeft != 0)
++    return false;
++  const size_t numChars = (outBuf.Size() - outLeft) / 4;
++  const Byte *p = (const Byte *)outBuf;
++  res.Empty();
++  for (size_t i = 0; i < numChars; i++, p += 4)
++    res += (wchar_t)GetUi32(p);
++  return true;
++}
++#endif
++
+ namespace NArchive {
+ namespace NZip {
+ 
+@@ -452,6 +503,21 @@
+   }
+   
+   
++  #ifndef _WIN32
++  // 7zMac patch: entries without UTF-8 flag and with -mcp=<cp>:
++  // valid UTF-8 bytes are decoded as UTF-8, otherwise decoded from <cp> via iconv.
++  if (!isUtf8 && useSpecifiedCodePage && codePage != CP_UTF8)
++  {
++    if (Check_UTF8_Buf(s.Ptr(), s.Len(), false))
++    {
++      ConvertUTF8ToUnicode(s, res);
++      return;
++    }
++    if (My_Iconv_To_Unicode(res, s, codePage))
++      return;
++  }
++  #endif
++
+   if (isUtf8)
+   {
+     ConvertUTF8ToUnicode(s, res);

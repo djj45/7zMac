@@ -1,0 +1,36 @@
+# 推送 v* 标签（如 v1.0.0）时，在 GitHub 的 macOS 机器上构建 DMG 并发布到 Releases。
+# CI 中没有开发者证书，App 为 ad-hoc 签名（用户首次打开需在“隐私与安全性”中允许）。
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  dmg:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build DMG
+        run: bash scripts/make-dmg.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: 7zMac-dmg
+          path: dist/*.dmg
+
+      - name: Publish release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.dmg
+          generate_release_notes: true
