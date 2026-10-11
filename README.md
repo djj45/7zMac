@@ -20,6 +20,7 @@
 - **后台运行**：右键操作不打开主窗口、不出现在 Dock；耗时任务在右上角显示进度，可取消。
 - **双击浏览**：关联常见压缩格式，双击打开浏览窗口，支持搜索、双击预览、拖出到 Finder、解压选中项。
 - **中文 ZIP 不乱码**：给 7-Zip 打了补丁，Windows 中文系统打出的 GBK 文件名 ZIP 也能正确显示。
+- **中文密码**：7z 支持中文密码（与 Windows 7-Zip 互通）；能解开 Windows 上用中文密码加密的 ZIP。
 - **格式**：解压支持 7z、zip、rar、tar、gz、bz2、xz、zst、cab、iso、wim 及分卷等；压缩支持 7z、zip、tar.gz、tar.xz，可加密（AES-256）、分卷。
 
 ## 安装
@@ -78,8 +79,8 @@ bash scripts/make-dmg.sh       # 输出 dist/7zMac-<版本>.dmg
 2. 提交后打标签并推送：
 
    ```bash
-   git tag v1.0.1
-   git push origin v1.0.1
+   git tag v1.0.2
+   git push origin v1.0.2
    ```
 
 GitHub Actions（`.github/workflows/release.yml`）会在 macOS 机器上自动构建 DMG 并发布到 Releases。

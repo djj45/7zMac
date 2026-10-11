@@ -52,11 +52,13 @@ private struct CompressSettingsView: View {
     @AppStorage(PrefKey.threads) private var threads = 0
     @AppStorage(PrefKey.encryption) private var encryption = EncryptionMode.off.rawValue
     @AppStorage(PrefKey.encryptNames) private var encryptNames = true
+    @AppStorage(PrefKey.confirmPassword) private var confirmPassword = true
     @AppStorage(PrefKey.volumeMB) private var volumeMB = 0
     @AppStorage(PrefKey.excludeJunk) private var excludeJunk = true
 
     @State private var fixedPassword = ""
     @State private var passwordNote = ""
+    @State private var showFixedPassword = false
 
     private var currentFormat: ArchiveFormat { ArchiveFormat(rawValue: format) ?? .sevenZ }
 
@@ -97,10 +99,24 @@ private struct CompressSettingsView: View {
                     Picker("密码", selection: $encryption) {
                         ForEach(EncryptionMode.allCases) { Text($0.title).tag($0.rawValue) }
                     }
+                    if encryption == EncryptionMode.ask.rawValue {
+                        Toggle("输入密码时需要再输入一遍确认", isOn: $confirmPassword)
+                    }
                     if encryption == EncryptionMode.fixed.rawValue {
                         HStack {
-                            SecureField("固定密码（保存在钥匙串）", text: $fixedPassword)
+                            if showFixedPassword {
+                                TextField("固定密码（保存在钥匙串）", text: $fixedPassword)
+                            } else {
+                                SecureField("固定密码（保存在钥匙串）", text: $fixedPassword)
+                            }
+                            Toggle("显示", isOn: $showFixedPassword)
+                                .toggleStyle(.checkbox)
+                                .help("输入中文密码时请勾选（密码框不支持输入法）")
                             Button("保存") {
+                                if currentFormat == .zip, !fixedPassword.allSatisfy({ $0.isASCII }) {
+                                    passwordNote = SevenZip.zipPasswordHint
+                                    return
+                                }
                                 passwordNote = Keychain.savePassword(fixedPassword) ? "已保存" : "保存失败"
                                 fixedPassword = ""
                             }

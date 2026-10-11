@@ -106,6 +106,7 @@ enum PrefKey {
     static let threads         = "compress.threads"
     static let encryption      = "compress.encryption"
     static let encryptNames    = "compress.encryptNames"
+    static let confirmPassword = "compress.confirmPassword"
     static let volumeMB        = "compress.volumeMB"
     static let excludeJunk     = "compress.excludeMacJunk"
 
@@ -130,6 +131,7 @@ enum Prefs {
             PrefKey.threads: 0,
             PrefKey.encryption: EncryptionMode.off.rawValue,
             PrefKey.encryptNames: true,
+            PrefKey.confirmPassword: true,
             PrefKey.volumeMB: 0,
             PrefKey.excludeJunk: true,
 
@@ -154,6 +156,7 @@ enum Prefs {
     static var threads: Int { d.integer(forKey: PrefKey.threads) }
     static var encryption: EncryptionMode { EncryptionMode(rawValue: d.string(forKey: PrefKey.encryption) ?? "") ?? .off }
     static var encryptNames: Bool { d.bool(forKey: PrefKey.encryptNames) }
+    static var confirmPassword: Bool { d.bool(forKey: PrefKey.confirmPassword) }
     static var volumeMB: Int { max(0, d.integer(forKey: PrefKey.volumeMB)) }
     static var excludeJunk: Bool { d.bool(forKey: PrefKey.excludeJunk) }
 

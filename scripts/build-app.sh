@@ -31,8 +31,12 @@ if ! command -v xcodegen >/dev/null 2>&1; then
 fi
 
 # ---------- 1. 7zz ----------
-if [ ! -x vendor/bin/7zz ] || [ "${REBUILD_7ZZ:-0}" = "1" ]; then
+# 补丁或 7-Zip 版本有变化时自动重新下载源码、打补丁、编译
+STAMP="$(cat vendor/patches/*.patch scripts/fetch-7zip.sh scripts/build-7zz.sh | shasum | cut -c1-16)"
+if [ ! -x vendor/bin/7zz ] || [ "$(cat vendor/bin/.stamp 2>/dev/null)" != "$STAMP" ] || [ "${REBUILD_7ZZ:-0}" = "1" ]; then
+  rm -rf vendor/7zip
   bash scripts/build-7zz.sh
+  echo "$STAMP" > vendor/bin/.stamp
 fi
 
 # ---------- 2. 签名身份 ----------

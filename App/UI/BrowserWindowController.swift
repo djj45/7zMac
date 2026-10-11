@@ -218,7 +218,7 @@ final class BrowserWindowController: NSWindowController, NSWindowDelegate {
                     updateStatus()
                     return
                 } catch SevenZipError.wrongPassword {
-                    guard let pw = PasswordPrompt.ask(for: url.lastPathComponent, retry: password != nil) else {
+                    guard let pw = PasswordPrompt.ask(for: url.lastPathComponent, retry: password != nil, button: "打开") else {
                         showOverlay(loading: false, message: "这个压缩包的文件名已加密，需要密码才能查看内容。")
                         return
                     }

@@ -16,7 +16,11 @@
 
 `vendor/patches/0001-zip-codepage-iconv.patch`：在非 Windows 平台上，让 ZIP 文件名的 `-mcp=<代码页>`
 参数真正生效（通过 iconv 转码），用于正确显示 Windows 中文系统生成的 GBK 文件名 ZIP。
-该补丁与 7-Zip 采用相同许可（LGPL 2.1+）。
+
+`vendor/patches/0002-zip-password-codepage.patch`：新增 ZIP 参数 `-mpcp=<代码页>`，在非 Windows 平台上把密码
+按指定代码页（如 GBK）转换后再解密，用于打开 Windows 上用中文密码加密的 ZIP。
+
+这些补丁与 7-Zip 采用相同许可（LGPL 2.1+）。
 
 ### 源码获取
 

@@ -74,11 +74,17 @@ final class JobRunner: ObservableObject {
                 case .off:
                     break
                 case .ask:
-                    guard let pw = PasswordPrompt.askNew(for: label) else { throw SevenZipError.cancelled }
+                    guard let pw = PasswordPrompt.askNew(for: label, confirm: Prefs.confirmPassword,
+                                                         asciiOnly: Prefs.format == .zip) else {
+                        throw SevenZipError.cancelled
+                    }
                     password = pw.isEmpty ? nil : pw
                 case .fixed:
                     guard let pw = Keychain.loadPassword(), !pw.isEmpty else {
                         throw SevenZipError.message("设置里选择了“使用固定密码”，但还没有设置密码。")
+                    }
+                    if Prefs.format == .zip, !pw.allSatisfy({ $0.isASCII }) {
+                        throw SevenZipError.message(SevenZip.zipPasswordHint)
                     }
                     password = pw
                 }

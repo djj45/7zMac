@@ -118,6 +118,9 @@ enum SevenZip {
     /// 遇到加密内容会直接报 “Wrong password”，由界面弹框再重试。
     static let placeholderPassword = "__7zmac_no_password__"
 
+    /// ZIP 没有规定密码的编码，7-Zip 只允许 ZIP 使用英文密码
+    static let zipPasswordHint = "ZIP 格式的密码只能使用英文字母、数字和符号。要用中文密码，请在设置里把压缩格式改为 7z。"
+
     static var executableURL: URL {
         if let url = Bundle.main.url(forAuxiliaryExecutable: "7zz") { return url }
         return URL(fileURLWithPath: "/usr/local/bin/7zz")
@@ -190,20 +193,28 @@ enum SevenZip {
             return
         }
 
-        func args(withCodePage: Bool) -> [String] {
+        func args(withCodePage: Bool, passwordCodePage: Int? = nil) -> [String] {
             var a = ["x", "-y", "-bso0", "-bse2", "-bsp1", "-sccUTF-8", pw, out]
             if withCodePage { a.append("-mcp=\(Prefs.zipCodePage.rawValue)") }
+            if let passwordCodePage { a.append("-mpcp=\(passwordCodePage)") }
             if !entries.isEmpty { a.append("-spd") }
             return a + ["--", archive.path] + entries
         }
 
         let useCP = ArchiveTypes.isZip(name: name)
-        let r = try await execute([args(withCodePage: useCP)], progress: progress, cancel: cancel)[0]
+        var r = try await execute([args(withCodePage: useCP)], progress: progress, cancel: cancel)[0]
         if useCP, r.exitCode == 2, r.stderr.contains("E_INVALIDARG") {
             // 后缀是 .zip 但实际不是 ZIP：去掉代码页参数重试
             let r2 = try await execute([args(withCodePage: false)], progress: progress, cancel: cancel)[0]
             try check(r2, cancel: cancel)
             return
+        }
+        // 中文密码的 ZIP：先按 UTF-8 试（mac / Linux 打的包），不对再按 GBK 等本地编码试（Windows 打的包）
+        if useCP, r.exitCode != 0, r.stderr.contains("Wrong password"),
+           let password, !password.allSatisfy({ $0.isASCII }), cancel?.isCancelled != true {
+            let legacy = Prefs.zipCodePage == .utf8 ? ZipCodePage.autoGBK.rawValue : Prefs.zipCodePage.rawValue
+            r = try await execute([args(withCodePage: true, passwordCodePage: legacy)],
+                                  progress: progress, cancel: cancel)[0]
         }
         try check(r, cancel: cancel)
     }
@@ -232,6 +243,7 @@ enum SevenZip {
         case .zip:
             var a = ["a", "-tzip", "-mx=\(o.level.rawValue)", mt, "-mcu=on"] + common + excludes + volume
             if let pw = o.password, !pw.isEmpty {
+                guard pw.allSatisfy({ $0.isASCII }) else { throw SevenZipError.message(zipPasswordHint) }
                 a += ["-p\(pw)", "-mem=AES256"]
             }
             a += ["--", output.path] + names
